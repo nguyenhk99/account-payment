@@ -11,8 +11,6 @@ class TestAccountFinancialDiscountCommon(SavepointCase):
         move_type,
         payment_term=None,
         invoice_date=None,
-        invoice_date_due=None,
-        currency=None,
         payment_reference=None,
     ):
         move_form = Form(
@@ -21,9 +19,6 @@ class TestAccountFinancialDiscountCommon(SavepointCase):
         move_form.partner_id = partner
         move_form.invoice_payment_term_id = payment_term
         move_form.invoice_date = invoice_date
-        move_form.invoice_date_due = invoice_date_due
-        if currency is not None:
-            move_form.currency_id = currency
         if payment_reference is not None:
             move_form.payment_reference = payment_reference
         return move_form.save()
@@ -61,7 +56,7 @@ class TestAccountFinancialDiscountCommon(SavepointCase):
             {
                 "code": "wrtrev",
                 "name": "writeoff revenue",
-                "user_type_id": cls.env.ref("account.data_account_type_expenses").id,
+                "account_type": "expense",
                 "reconcile": False,
             }
         )
@@ -69,7 +64,7 @@ class TestAccountFinancialDiscountCommon(SavepointCase):
             {
                 "code": "wrtexp",
                 "name": "writeoff expenses",
-                "user_type_id": cls.env.ref("account.data_account_type_expenses").id,
+                "account_type": "expense",
                 "reconcile": False,
             }
         )
@@ -87,17 +82,16 @@ class TestAccountFinancialDiscountCommon(SavepointCase):
                         {
                             "value": "balance",
                             "days": 60,
-                            "option": "day_after_invoice_date",
                         },
                     )
                 ],
             }
         )
         cls.payable_account = cls.env["account.account"].search(
-            [("user_type_id.name", "=", "Payable")], limit=1
+            [("account_type", "=", "liability_payable")], limit=1
         )
         cls.receivable_account = cls.env["account.account"].search(
-            [("user_type_id.name", "=", "Receivable")], limit=1
+            [("account_type", "=", "asset_receivable")], limit=1
         )
         cls.bank_journal = cls.env["account.journal"].search(
             [("company_id", "=", cls.env.company.id), ("type", "=", "bank")],
@@ -116,7 +110,7 @@ class TestAccountFinancialDiscountCommon(SavepointCase):
             {
                 "code": "exp",
                 "name": "expenses",
-                "user_type_id": cls.env.ref("account.data_account_type_expenses").id,
+                "account_type": "expense",
                 "reconcile": True,
             }
         )

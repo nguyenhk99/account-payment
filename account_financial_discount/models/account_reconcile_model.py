@@ -34,7 +34,7 @@ class AccountReconcileModel(models.Model):
     @api.constrains(
         "rule_type",
         "apply_financial_discounts",
-        "match_total_amount",
+        "allow_payment_tolerance",
         # "strict_match_total_amount",
         "financial_discount_label",
         "financial_discount_revenue_account_id",
@@ -47,7 +47,7 @@ class AccountReconcileModel(models.Model):
             if rec.rule_type != "invoice_matching" or not rec.apply_financial_discounts:
                 continue
             errors = []
-            if not rec.match_total_amount or rec.match_total_amount_param != 100.0:
+            if not rec.allow_payment_tolerance or rec.payment_tolerance_param != 0.0:
                 errors.append(_("Amount Matching must be set to 100%"))
             # if not rec.strict_match_total_amount:
             #     errors.append(_("Strict amount matching must be set"))
@@ -185,7 +185,7 @@ class AccountReconcileModel(models.Model):
     def _get_select_communication_flag(self):
         """Consider financial discount to allow reconciliation with the prop"""
         comm_flag = super()._get_select_communication_flag()
-        # if self.match_total_amount and self.strict_match_total_amount:
+        # if self.allow_payment_tolerance and self.strict_match_total_amount:
         comm_flag = (
             r"""
             COALESCE(
@@ -198,9 +198,9 @@ class AccountReconcileModel(models.Model):
                 WHEN abs(st_line.amount) < abs(aml.balance) - abs(aml.amount_discount) THEN (abs(st_line.amount) - abs(aml.amount_discount)) / abs(aml.balance) * 100
                 WHEN abs(st_line.amount) > abs(aml.balance) + abs(aml.amount_discount) THEN (abs(aml.balance) + abs(aml.amount_discount)) / abs(st_line.amount) * 100
                 ELSE 100
-            END >= {match_total_amount_param}
+            END >= {payment_tolerance_param}
                 """.format(
-                match_total_amount_param=self.match_total_amount_param
+                payment_tolerance_param=self.payment_tolerance_param
             )
         )
         return comm_flag

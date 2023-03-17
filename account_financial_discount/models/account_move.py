@@ -40,10 +40,8 @@ class AccountMove(models.Model):
             FROM account_move move
             LEFT JOIN account_move_line line ON line.move_id = move.id
             LEFT JOIN account_account account ON account.id = line.account_id
-            LEFT JOIN account_account_type account_type
-                ON account_type.id = account.user_type_id
             WHERE move.id IN %s
-            AND account_type.type IN ('receivable', 'payable')
+            AND account.account_type IN ('asset_receivable', 'liability_payable')
             GROUP BY move.id, move.move_type, line.date_discount
         """,
             [tuple(self.ids)],
@@ -146,7 +144,8 @@ class AccountMove(models.Model):
     def _get_first_payment_term_line(self):
         self.ensure_one()
         payment_term_lines = self.line_ids.filtered(
-            lambda line: line.account_id.user_type_id.type in ("receivable", "payable")
+            lambda line: line.account_id.account_type
+            in ("asset_receivable", "liability_payable")
         )
         return fields.first(payment_term_lines.sorted("date_maturity"))
 

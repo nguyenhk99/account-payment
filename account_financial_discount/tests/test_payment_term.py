@@ -14,7 +14,6 @@ class TestAccountFinancialDiscountManualPayment(TestAccountFinancialDiscountComm
             "in_invoice",
             payment_term=cls.payment_term,
             invoice_date="2019-04-01",
-            invoice_date_due="2019-05-01",
         )
         cls.init_invoice_line(cls.invoice1, 1.0, 1000.0)
 
